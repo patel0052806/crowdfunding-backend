@@ -14,7 +14,7 @@ const donationRoute = require("./routes/donation-router");
 const corsOptions = {
   origin: [
     "http://localhost:5173", 
-    "https://your-frontend-domain.vercel.app"
+    "https://crowdfunding-frontend-jet.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
