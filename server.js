@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -11,8 +10,12 @@ const campaignRoute = require("./routes/campaign-router");
 const adminRoute = require("./routes/admin-router");
 const donationRoute = require("./routes/donation-router");
 
+// CORS
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173", 
+    "https://your-frontend-domain.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 };
@@ -20,19 +23,20 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+// ROUTES
 app.use("/api/auth", router);
 app.use("/api/form", contactRoute);
 app.use("/api/data", campaignRoute);
 
-
-//admin routes
+// admin routes
 app.use("/api/admin", adminRoute);
 app.use("/api/donation", donationRoute);
-//app.use("/api/")
 
+// ERROR MIDDLEWARE
 app.use(errorMiddleware);
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+
 connectDb().then(() => {
   app.listen(PORT, () => {
     console.log(`server is running at port: ${PORT}`);
