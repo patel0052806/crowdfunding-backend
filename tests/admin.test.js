@@ -16,7 +16,7 @@ afterAll(async () => {
 });
 
 const createAdminAndToken = async () => {
-  const admin = new User({ username: 'adminuser', email: `admin-${Date.now()}@example.com`, password: 'password', isAdmin: true });
+  const admin = new User({ username: 'adminuser', email: `admin-${Date.now()}@example.com`, phone: '1234567890', password: 'password', isAdmin: true });
   await admin.save();
   const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET || 'testsecret');
   return { admin, token };
@@ -39,6 +39,6 @@ describe('Admin campaign updates', () => {
       .send({ goal: 3500 });
 
     expect(res.status).toBe(400);
-    expect(res.body.msg).toMatch(/Goal cannot be lower/i);
+    expect(res.body.msg).toMatch(/Raised cannot exceed goal/i);
   }, 10000);
 });

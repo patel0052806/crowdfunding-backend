@@ -19,7 +19,7 @@ afterAll(async () => {
 });
 
 const createUserAndToken = async () => {
-  const user = new User({ username: 'testuser', email: `test-${Date.now()}@example.com`, password: 'password' });
+  const user = new User({ username: 'testuser', email: `test-${Date.now()}@example.com`, phone: '1234567890', password: 'password' });
   await user.save();
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'testsecret');
   return { user, token };
@@ -64,6 +64,40 @@ describe('Donation endpoint', () => {
 
     const updated = await Campaign.findById(campaign._id);
     expect(updated.raised).toBe(5000);
+  }, 10000);
+
+  test('rejects donation over a 1000 goal', async () => {
+    const { token } = await createUserAndToken();
+    const campaign = new Campaign({ title: 'Goal1000', goal: 1000, raised: 0, creator: new mongoose.Types.ObjectId() });
+    await campaign.save();
+
+    const res = await request(app)
+      .post('/api/donation/donate')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ campaignId: campaign._id, amount: 1500 });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message');
+
+    const updated = await Campaign.findById(campaign._id);
+    expect(updated.raised).toBe(0);
+  }, 10000);
+
+  test('accepts donation equal to goal 1000', async () => {
+    const { token } = await createUserAndToken();
+    const campaign = new Campaign({ title: 'Goal1000Exact', goal: 1000, raised: 0, creator: new mongoose.Types.ObjectId() });
+    await campaign.save();
+
+    const res = await request(app)
+      .post('/api/donation/donate')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ campaignId: campaign._id, amount: 1000 });
+
+    expect(res.status).toBe(201);
+    expect(res.body.message).toMatch(/fulfilled/i);
+
+    const updated = await Campaign.findById(campaign._id);
+    expect(updated.raised).toBe(1000);
   }, 10000);
 
   test('handles concurrent donations correctly', async () => {
