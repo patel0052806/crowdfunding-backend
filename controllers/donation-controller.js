@@ -90,6 +90,7 @@ const getUserReceipts = async (req, res) => {
         const userId = req.user._id;
         const receipts = await Receipt.find({ donor: userId })
             .populate('campaign', '_id title')
+            .populate('donor', 'username email')
             .sort({ createdAt: -1 });
         res.status(200).json(receipts);
     } catch (error) {
@@ -129,10 +130,24 @@ const getUserDonations = async (req, res) => {
     }
 };
 
+const getMyDonations = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const donations = await Donation.find({ donor: userId })
+            .populate('campaign')
+            .sort({ createdAt: -1 });
+        res.status(200).json(donations);
+    } catch (error) {
+        console.error('❌ Error fetching donations:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     donate,
     getDonations,
     getUserReceipts,
     getReceiptById,
-    getUserDonations
+    getUserDonations,
+    getMyDonations
 };
