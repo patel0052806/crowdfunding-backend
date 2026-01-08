@@ -2,7 +2,21 @@ const Campaign = require('../models/campaign-model');
 
 const campaigns = async (req, res) => {
     try {
-        const allCampaigns = await Campaign.find({ status: 'approved' });
+        const { search, category } = req.query;
+        const query = { status: 'approved' };
+
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        if (category) {
+            query.category = category;
+        }
+
+        const allCampaigns = await Campaign.find(query);
         return res.status(200).json(allCampaigns);
     } catch (error) {
         console.log(`Campaigns error: ${error}`);
