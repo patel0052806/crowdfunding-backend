@@ -10,6 +10,8 @@ router
   .route("/register")
   .post(validate(signupSchema), authControllers.register);
 router.route("/login").post(validate(loginSchema), authControllers.login);
+router.route("/send-otp").post(authControllers.sendOtp);
+router.route("/verify-otp").post(authControllers.verifyOtp);
 
  
 router.route("/user").get(authMiddleware, authControllers.user);

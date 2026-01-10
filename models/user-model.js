@@ -25,6 +25,16 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  otp: {
+    type: String,
+  },
+  otpExpires: {
+    type: Date,
+  },
 });
 
 // secure the password with bcrypt before saving
