@@ -11,15 +11,7 @@ const adminRoute = require("./routes/admin-router");
 const donationRoute = require("./routes/donation-router");
 
 // CORS
-const corsOptions = {
-  origin: [
-    "http://localhost:5173", 
-    "https://crowdfunding-frontend-jet.vercel.app"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  credentials: true,
-};
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(express.json());
 
