@@ -1,29 +1,66 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // 1) Create a transporter
-    // Note: You need to configure your .env file with the following
-    // EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, EMAIL_PASSWORD
-    // For development, you can use a service like Mailtrap.
-    const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        auth: {
-            user: process.env.EMAIL_USERNAME,
-            pass: process.env.EMAIL_PASSWORD,
-        },
-    });
-
-    // 2) Define the email options
+    // Build mail options
     const mailOptions = {
         from: 'Crowdfunding App <no-reply@crowdfunding.com>',
         to: options.email,
         subject: options.subject,
-        text: options.message,
+        html: options.html,
     };
 
-    // 3) Actually send the email
-    await transporter.sendMail(mailOptions);
+    // If env vars are provided, use them. Otherwise fall back to Ethereal test account.
+    try {
+        let transporter;
+
+        if (process.env.EMAIL_HOST) {
+            transporter = nodemailer.createTransport({
+                host: process.env.EMAIL_HOST,
+                port: Number(process.env.EMAIL_PORT),
+                secure: Number(process.env.EMAIL_PORT) === 465,
+                auth: {
+                    user: process.env.EMAIL_USERNAME,
+                    pass: process.env.EMAIL_PASSWORD,
+                },
+            });
+        } else if (process.env.EMAIL && process.env.PASSWORD) {
+            transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL,
+                    pass: process.env.PASSWORD,
+                },
+            });
+        }
+        else {
+            // No configuration provided -> create an Ethereal test account (dev only)
+            const testAccount = await nodemailer.createTestAccount();
+            transporter = nodemailer.createTransport({
+                host: testAccount.smtp.host,
+                port: testAccount.smtp.port,
+                secure: testAccount.smtp.secure,
+                auth: {
+                    user: testAccount.user,
+                    pass: testAccount.pass,
+                },
+            });
+            console.warn('EMAIL_* env vars are not set. Using Ethereal test account for email (development only).');
+        }
+
+        const info = await transporter.sendMail(mailOptions);
+
+        // If using Ethereal, log preview URL and return it to the caller
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+            console.log(`Preview email available at: ${previewUrl}`);
+        }
+
+        return { info, previewUrl };
+
+    } catch (err) {
+        console.error('Failed to send email:', err);
+        throw err; // Let the caller decide how to handle the failure
+    }
 };
 
 module.exports = sendEmail;

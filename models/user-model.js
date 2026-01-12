@@ -65,6 +65,6 @@ userSchema.methods.generateToken = function () {
 };
 
 // define collection name
-const User = mongoose.model("USER", userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

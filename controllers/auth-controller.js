@@ -1,5 +1,5 @@
 const User = require('../models/user-model');
-const nodemailer = require('nodemailer');
+const sendEmail = require('../utils/sendEmail');
 
 // home page
 const home = async (req, res) => {
@@ -53,30 +53,17 @@ const sendOtp = async (req, res) => {
         user.otpExpires = Date.now() + 3600000; // 1 hour
         await user.save();
 
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL,
-                pass: process.env.PASSWORD
-            }
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL,
-            to: email,
+        await sendEmail({
+            email,
             subject: 'OTP for registration',
-            text: `Your OTP is ${otp}`
-        };
-
-        transporter.sendMail(mailOptions, async (error, info) => {
-            if (error) {
-                return res.status(500).json({ message: 'Error sending email' });
-            }
-            res.status(200).json({ message: 'OTP sent successfully' });
+            html: `<p>Your OTP is ${otp}</p>`
         });
+
+        res.status(200).json({ message: 'OTP sent successfully' });
     }
     catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error sending OTP:', error);
+        res.status(500).json({ message: 'Error sending OTP' });
     }
 };
 

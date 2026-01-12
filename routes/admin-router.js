@@ -39,15 +39,11 @@ router
 .route('/campaigns/pending')
 .get(authMiddleware, adminMiddleware, adminController.getPendingCampaigns);
 
-// Approve a campaign
-router
-.route('/campaigns/approve/:id')
-.put(authMiddleware, adminMiddleware, adminController.approveCampaign);
 
-// Reject a campaign
+// Update Campaign Status (Approve/Reject)
 router
-.route('/campaigns/reject/:id')
-.delete(authMiddleware, adminMiddleware, adminController.rejectCampaign);
+.route('/campaigns/:id/status')
+.put(authMiddleware, adminMiddleware, adminController.updateCampaignStatus);
 
 // Get a single campaign by id
 router
