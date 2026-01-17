@@ -8,7 +8,7 @@ const receiptSchema = new mongoose.Schema({
     },
     donor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'USER',
+        ref: 'User',
         required: true
     },
     campaign: {

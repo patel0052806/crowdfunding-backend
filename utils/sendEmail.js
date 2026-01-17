@@ -3,13 +3,12 @@ const nodemailer = require('nodemailer');
 const sendEmail = async (options) => {
     // Build mail options
     const mailOptions = {
-        from: 'Crowdfunding App <no-reply@crowdfunding.com>',
+        from: process.env.EMAIL ? `Crowdfunding App <${process.env.EMAIL}>` : 'Crowdfunding App <no-reply@crowdfunding.com>',
         to: options.email,
         subject: options.subject,
         html: options.html,
     };
 
-    // If env vars are provided, use them. Otherwise fall back to Ethereal test account.
     try {
         let transporter;
 
@@ -31,8 +30,7 @@ const sendEmail = async (options) => {
                     pass: process.env.PASSWORD,
                 },
             });
-        }
-        else {
+        } else if (process.env.NODE_ENV !== 'production') {
             // No configuration provided -> create an Ethereal test account (dev only)
             const testAccount = await nodemailer.createTestAccount();
             transporter = nodemailer.createTransport({
@@ -45,6 +43,9 @@ const sendEmail = async (options) => {
                 },
             });
             console.warn('EMAIL_* env vars are not set. Using Ethereal test account for email (development only).');
+        } else {
+            console.error('Email service is not configured for production.');
+            throw new Error('Email service is not configured.');
         }
 
         const info = await transporter.sendMail(mailOptions);
