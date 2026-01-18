@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 const sendEmail = async (options) => {
     const mailOptions = {
@@ -9,28 +10,30 @@ const sendEmail = async (options) => {
     };
 
     try {
-        let transporter;
-
-        // In production, require SMTP variables to be set.
         if (process.env.NODE_ENV === 'production') {
-            console.log('Production environment detected.');
-            console.log(`SMTP Config: Host=${process.env.SMTP_HOST}, Port=${process.env.SMTP_PORT}, User=${process.env.SMTP_USER}`);
-            if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-                console.error('SMTP environment variables (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS) are not set for production.');
-                throw new Error('Email service is not configured for production.');
+            console.log('Production environment detected. Using SendGrid.');
+            
+            if (!process.env.SENDGRID_API_KEY) {
+                console.error('SENDGRID_API_KEY environment variable is not set for production.');
+                throw new Error('Email service (SendGrid) is not configured for production.');
             }
-            transporter = nodemailer.createTransport({
-                host: process.env.SMTP_HOST,
-                port: Number(process.env.SMTP_PORT),
-                secure: Number(process.env.SMTP_PORT) === 465, // usually true for port 465
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS,
-                },
-                connectionTimeout: 10 * 1000, // 10 seconds
-            });
+            
+            sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+            
+            const msg = {
+                to: options.email,
+                from: 'harshprogrammer789@gmail.com', // YOU MUST USE A VERIFIED SENDER EMAIL WITH SENDGRID
+                subject: options.subject,
+                html: options.html,
+            };
+
+            console.log('Sending email with SendGrid with options:', msg);
+            await sgMail.send(msg);
+            console.log('Email sent successfully with SendGrid.');
+
         } else {
             // For development, use Ethereal if SMTP variables are missing.
+            let transporter;
             if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
                 console.warn('SMTP_* env vars not set. Using Ethereal test account for development.');
                 const testAccount = await nodemailer.createTestAccount();
@@ -54,21 +57,20 @@ const sendEmail = async (options) => {
                     },
                 });
             }
+
+            const info = await transporter.sendMail(mailOptions);
+
+            const previewUrl = nodemailer.getTestMessageUrl(info);
+            if (previewUrl) {
+                console.log(`Development email preview available at: ${previewUrl}`);
+            }
+            return { info };
         }
-
-        const info = await transporter.sendMail(mailOptions);
-
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        if (previewUrl) {
-            console.log(`Development email preview available at: ${previewUrl}`);
-        }
-
-        return { info };
 
     } catch (err) {
-        console.error('Failed to send email:', err);
+        console.error('Failed to send email:', err.response ? err.response.body : err);
         // Wrap the original error to provide more context for debugging.
-        throw new Error(`Nodemailer failed to send email. Reason: ${err.message}`);
+        throw new Error(`Nodemailer/SendGrid failed to send email. Reason: ${err.message}`);
     }
 };
 
