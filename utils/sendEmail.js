@@ -13,6 +13,8 @@ const sendEmail = async (options) => {
 
         // In production, require SMTP variables to be set.
         if (process.env.NODE_ENV === 'production') {
+            console.log('Production environment detected.');
+            console.log(`SMTP Config: Host=${process.env.SMTP_HOST}, Port=${process.env.SMTP_PORT}, User=${process.env.SMTP_USER}`);
             if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
                 console.error('SMTP environment variables (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS) are not set for production.');
                 throw new Error('Email service is not configured for production.');
@@ -25,6 +27,7 @@ const sendEmail = async (options) => {
                     user: process.env.SMTP_USER,
                     pass: process.env.SMTP_PASS,
                 },
+                connectionTimeout: 10 * 1000, // 10 seconds
             });
         } else {
             // For development, use Ethereal if SMTP variables are missing.
