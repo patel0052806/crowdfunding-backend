@@ -64,7 +64,8 @@ const sendEmail = async (options) => {
 
     } catch (err) {
         console.error('Failed to send email:', err);
-        throw err;
+        // Wrap the original error to provide more context for debugging.
+        throw new Error(`Nodemailer failed to send email. Reason: ${err.message}`);
     }
 };
 
