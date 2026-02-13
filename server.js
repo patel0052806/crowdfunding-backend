@@ -9,9 +9,32 @@ const contactRoute = require("./routes/contact-route");
 const campaignRoute = require("./routes/campaign-router");
 const adminRoute = require("./routes/admin-router");
 const donationRoute = require("./routes/donation-router");
+const paymentRoute = require("./routes/payment-router");
 
-// CORS
-app.use(cors());
+// CORS Configuration for Razorpay
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5000"
+  ],
+  credentials: true,
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "X-RTB-Fingerprint-ID",
+    "X-Razorpay-Request-ID"
+  ],
+  exposedHeaders: [
+    "X-RTB-Fingerprint-ID",
+    "X-Razorpay-Request-ID"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  maxAge: 86400
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
@@ -23,6 +46,7 @@ app.use("/api/data", campaignRoute);
 // admin routes
 app.use("/api/admin", adminRoute);
 app.use("/api/donation", donationRoute);
+app.use("/api/payment", paymentRoute);
 
 // ERROR MIDDLEWARE
 app.use(errorMiddleware);

@@ -26,6 +26,10 @@ const receiptSchema = new mongoose.Schema({
         unique: true,
         default: () => 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase()
     },
+    paymentId: {
+        type: String,
+        default: null
+    },
     donationDate: {
         type: Date,
         default: Date.now

@@ -12,8 +12,12 @@ const donationSchema = new mongoose.Schema({
     },
     donor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'USER',
+        ref: 'User',
         required: true
+    },
+    paymentId: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true
