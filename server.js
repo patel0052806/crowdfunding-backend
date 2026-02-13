@@ -21,15 +21,15 @@ const corsOptions = {
   ],
   credentials: true,
   allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "X-RTB-Fingerprint-ID",
-    "X-Razorpay-Request-ID"
+    "content-type",
+    "authorization",
+    "x-requested-with",
+    "x-rtb-fingerprint-id",
+    "x-razorpay-request-id"
   ],
   exposedHeaders: [
-    "X-RTB-Fingerprint-ID",
-    "X-Razorpay-Request-ID"
+    "x-rtb-fingerprint-id",
+    "x-razorpay-request-id"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   maxAge: 86400
