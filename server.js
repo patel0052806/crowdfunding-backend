@@ -37,6 +37,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// expose custom headers to browser so frontends can read razorpay/rtb headers
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Expose-Headers', 'x-rtb-fingerprint-id, x-razorpay-request-id');
+  next();
+});
+
 app.use(express.json());
 
 // ROUTES
