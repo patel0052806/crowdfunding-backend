@@ -55,8 +55,34 @@ app.use("/api/admin", adminRoute);
 app.use("/api/donation", donationRoute);
 app.use("/api/payment", paymentRoute);
 
+// Temporary debug route for testing email delivery (enable in production by setting ENABLE_EMAIL_DEBUG=true)
+if (process.env.ENABLE_EMAIL_DEBUG === 'true' || process.env.NODE_ENV !== 'production') {
+  app.post('/api/debug/send-test-email', async (req, res) => {
+    const { email } = req.body || {};
+    const to = email || process.env.SMTP_USER || process.env.SENDGRID_FROM || 'test@example.com';
+    console.log('DEBUG: /api/debug/send-test-email called for:', to);
+    try {
+      const result = await require('./utils/sendEmail')({ email: to, subject: 'Debug test email', html: '<p>Debug email</p>' });
+      return res.status(200).json({ ok: true, result });
+    } catch (err) {
+      console.error('DEBUG: send-test-email failed:', err);
+      return res.status(500).json({ ok: false, message: err.message, stack: err.stack });
+    }
+  });
+}
+
 // ERROR MIDDLEWARE
 app.use(errorMiddleware);
+
+// Startup diagnostics (DO NOT log secrets)
+console.log('Startup diagnostics — email config:', {
+  NODE_ENV: process.env.NODE_ENV,
+  hasSMTP: !!process.env.SMTP_HOST,
+  hasSendGrid: !!process.env.SENDGRID_API_KEY,
+  smtpHost: process.env.SMTP_HOST ? process.env.SMTP_HOST : undefined,
+  smtpPort: process.env.SMTP_PORT ? process.env.SMTP_PORT : undefined,
+  smtpFrom: process.env.SMTP_FROM_EMAIL ? process.env.SMTP_FROM_EMAIL : undefined,
+});
 
 const PORT = process.env.PORT || 5000;
 
