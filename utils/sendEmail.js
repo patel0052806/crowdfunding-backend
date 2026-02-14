@@ -23,6 +23,17 @@ const sendEmail = async (options) => {
             console.log('SMTP Config:', { host: smtpConfig.host, port: smtpConfig.port, secure: smtpConfig.secure, user: smtpConfig.auth.user });
             const transporter = nodemailer.createTransport(smtpConfig);
 
+            // verify transporter connection early to provide clearer diagnostics locally
+            try {
+                console.log('Verifying SMTP transporter connection...');
+                await transporter.verify();
+                console.log('SMTP transporter verified — connection OK.');
+            } catch (verifyErr) {
+                console.error('SMTP transporter verification failed:', verifyErr);
+                // surface verification failure immediately so logs are clearer
+                throw verifyErr;
+            }
+
             const mailOptions = {
                 from: process.env.SMTP_FROM_EMAIL ? `Crowdfunding App <${process.env.SMTP_FROM_EMAIL}>` : 'Crowdfunding App <no-reply@crowdfunding.com>',
                 to: options.email,
