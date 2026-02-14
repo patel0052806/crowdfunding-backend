@@ -31,9 +31,37 @@ const sendEmail = async (options) => {
             };
 
             console.log('Sending email with Nodemailer (SMTP) with options:', { to: mailOptions.to, from: mailOptions.from, subject: mailOptions.subject });
-            const info = await transporter.sendMail(mailOptions);
-            console.log('Email sent successfully with Nodemailer (SMTP).');
-            return { info };
+            try {
+                const info = await transporter.sendMail(mailOptions);
+                console.log('Email sent successfully with Nodemailer (SMTP).');
+                return { info };
+            } catch (smtpErr) {
+                console.error('SMTP send failed:', smtpErr);
+
+                // If SendGrid is available, attempt fallback (useful when host blocks outbound SMTP)
+                if (process.env.SENDGRID_API_KEY) {
+                    try {
+                        console.log('Attempting fallback: sending email via SendGrid API because SMTP failed.');
+                        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+                        const fromAddress = process.env.SENDGRID_FROM || process.env.SMTP_FROM_EMAIL || 'no-reply@crowdfunding.com';
+                        const msg = {
+                            to: options.email,
+                            from: fromAddress,
+                            subject: options.subject,
+                            html: options.html,
+                        };
+                        await sgMail.send(msg);
+                        console.log('Email sent successfully with SendGrid (fallback).');
+                        return;
+                    } catch (sgErr) {
+                        console.error('SendGrid fallback failed:', sgErr);
+                        if (sgErr.response) console.error(`SendGrid response error body: ${JSON.stringify(sgErr.response.body)}`);
+                    }
+                }
+
+                // rethrow original SMTP error if no fallback succeeded
+                throw smtpErr;
+            }
         }
 
         // No SMTP configured => fall back to SendGrid for production, Ethereal for development
