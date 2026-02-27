@@ -219,14 +219,85 @@ const updateCampaignStatus = async (req, res, next) => {
             // Don't fail the whole request because of email issues
         }
 
+        // notify all registered users about the new campaign (skip creator to avoid duplicate)
+        if (status === 'approved') {
+            try {
+                const users = await User.find({});
+                if (users && users.length > 0) {
+                    const notifySubject = `📣 New Campaign Launched: "${campaign.title}"`;
+                    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+                    const campaignLink = `${frontendUrl}/campaigns/${campaign._id}`;
+                    const notifyHtml = `
+                        <html>
+                            <body>
+                                <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                                    <h2>New Campaign is Live!</h2>
+                                    <p>Hi there,</p>
+                                    <p>We just approved a new campaign, <strong>"${campaign.title}"</strong>, on our platform.</p>
+                                    <p>${campaign.description || ''}</p>
+                                    <p>You can view it and support the cause by clicking the link below:</p>
+                                    <p><a href="${campaignLink}">${campaignLink}</a></p>
+                                    <br>
+                                    <p>Best,<br>The Crowdfunding Team</p>
+                                </div>
+                            </body>
+                        </html>
+                    `;
+
+                    const announcePromises = users
+                        .filter(u => String(u._id) !== String(user._id))
+                        .map(u => {
+                            return sendEmail({
+                                email: u.email,
+                                subject: notifySubject,
+                                html: notifyHtml,
+                            }).catch(err => {
+                                console.error(`Failed announcement email to ${u.email}:`, err);
+                            });
+                        });
+
+                    const results = await Promise.allSettled(announcePromises);
+                    const failures = results.filter(r => r.status === 'rejected').length;
+                    console.log(`Announcement emails attempted: ${results.length}, failures: ${failures}`);
+                }
+            } catch (announceError) {
+                console.error('Error while sending announcement emails to users:', announceError);
+            }
+        }
+
         const response = { msg: `Campaign ${status} successfully.` };
         if (previewUrl) response.previewUrl = previewUrl;
         res.status(200).json(response);
-
     } catch (error) {
         console.error('Error updating campaign status:', error);
         next(error);
     }
 };
 
-module.exports = { getAllUsers,getAllContacts,deleteUserById, getUserById, updateUserById, deleteContactById, getPendingCampaigns, getCampaignById, updateCampaignById, updateCampaignStatus };
+// provide simple report counts for admin dashboard
+const getCampaignReport = async (req, res, next) => {
+    try {
+        const total = await Campaign.countDocuments({});
+        const approved = await Campaign.countDocuments({ status: 'approved' });
+        const rejected = await Campaign.countDocuments({ status: 'rejected' });
+        const pending = await Campaign.countDocuments({ status: 'pending' });
+        return res.status(200).json({ total, approved, rejected, pending });
+    } catch (error) {
+        console.error('Error generating campaign report:', error);
+        next(error);
+    }
+};
+
+module.exports = {
+    getAllUsers,
+    getAllContacts,
+    deleteUserById,
+    getUserById,
+    updateUserById,
+    deleteContactById,
+    getPendingCampaigns,
+    getCampaignById,
+    updateCampaignById,
+    updateCampaignStatus,
+    getCampaignReport,
+};

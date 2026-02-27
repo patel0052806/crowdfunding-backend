@@ -45,6 +45,11 @@ router
 .route('/campaigns/:id/status')
 .put(authMiddleware, adminMiddleware, adminController.updateCampaignStatus);
 
+// Campaign statistics report
+router
+.route('/campaigns/report')
+.get(authMiddleware, adminMiddleware, adminController.getCampaignReport);
+
 // Get a single campaign by id
 router
 .route('/campaigns/:id')
