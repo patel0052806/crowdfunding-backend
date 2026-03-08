@@ -50,6 +50,11 @@ router
 .route('/campaigns/report')
 .get(authMiddleware, adminMiddleware, adminController.getCampaignReport);
 
+// Campaign list for report table (optional status filter)
+router
+.route('/campaigns/report/list')
+.get(authMiddleware, adminMiddleware, adminController.getCampaignsForReport);
+
 // Get a single campaign by id
 router
 .route('/campaigns/:id')

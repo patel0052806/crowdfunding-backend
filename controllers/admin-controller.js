@@ -287,6 +287,30 @@ const getCampaignReport = async (req, res, next) => {
         next(error);
     }
 };
+// campaign list for admin report table (optionally filtered by status)
+const getCampaignsForReport = async (req, res, next) => {
+    try {
+        const status = req.query.status;
+        const allowedStatuses = ['approved', 'rejected', 'pending'];
+        const query = {};
+
+        if (status && status !== 'total') {
+            if (!allowedStatuses.includes(status)) {
+                return res.status(400).json({ msg: 'Invalid status filter.' });
+            }
+            query.status = status;
+        }
+
+        const campaigns = await Campaign.find(query)
+            .populate('creator', 'username email')
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json(campaigns);
+    } catch (error) {
+        console.error('Error fetching campaign list for report:', error);
+        next(error);
+    }
+};
 
 module.exports = {
     getAllUsers,
@@ -300,4 +324,6 @@ module.exports = {
     updateCampaignById,
     updateCampaignStatus,
     getCampaignReport,
+    getCampaignsForReport,
 };
+

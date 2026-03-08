@@ -28,12 +28,13 @@ const campaigns = async (req, res) => {
 
 const addCampaign = async (req, res) => {
     try {
-        const { title, description, goal, deadline } = req.body;
+        const { title, description, goal, deadline, category } = req.body;
         const newCampaign = new Campaign({
             title,
             description,
             goal,
             deadline,
+            category,
             creator: req.user._id
         });
         await newCampaign.save();
@@ -80,12 +81,13 @@ const addCampaign = async (req, res) => {
 
 const applyForCampaign = async (req, res) => {
     try {
-        const { title, description, goal, deadline } = req.body;
+        const { title, description, goal, deadline, category } = req.body;
         const newCampaign = new Campaign({
             title,
             description,
             goal,
             deadline,
+            category,
             creator: req.user._id
             // Status will default to 'pending' based on the schema
         });
@@ -226,3 +228,4 @@ const rejectCampaign = async (req, res) => {
 };
 
 module.exports = { campaigns, addCampaign, applyForCampaign, deleteCampaign, getCampaignById, updateCampaign, getPendingCampaigns, approveCampaign, rejectCampaign };
+
